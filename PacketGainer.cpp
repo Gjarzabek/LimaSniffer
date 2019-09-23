@@ -7,33 +7,29 @@ PacketGainer::PacketGainer(char * device) {
     mDeviceName = device;
     if (pcap_lookupnet(mDeviceName, &mIp, 
                        &mSubnetMask, mErrorBuff) == -1) {
-        mIsValid = false;
         fprintf(stderr, "Coulnt get netmask for device: %s", mErrorBuff);
         return;
     }
     mHandler = pcap_open_live(mDeviceName, BUFSIZ, 1, 0, mErrorBuff);
     if (mHandler == nullptr) {
-        mIsValid = false;
         fprintf(stderr, "Couldn't set up handler: %s", mErrorBuff);
     }
     if (pcap_datalink(mHandler) != DLT_EN10MB) {
 		fprintf(stderr, "%s is not an Ethernet\n", mDeviceName);
-		mIsValid = false;
         return;
 	}
 
     if (pcap_compile(mHandler, &mCompiledPcap, mFilterExpression, 0, mIp) == -1) {
 		fprintf(stderr, "Couldn't parse filter %s: %s\n", mFilterExpression, pcap_geterr(mHandler));
-        mIsValid = false;
         return;
 	}
 
 	/* apply the compiled filter */
 	if (pcap_setfilter(mHandler, &mCompiledPcap) == -1) {
 		fprintf(stderr, "Couldn't install filter %s: %s\n", mFilterExpression, pcap_geterr(mHandler));
-		mIsValid = false;
         return;
 	}
+    mIsValid = true;
 }
 
 PacketGainer::~PacketGainer() {

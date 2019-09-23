@@ -25,7 +25,7 @@ class PacketGainer {
         bpf_u_int32 mSubnetMask;
         bpf_u_int32 mIp;
 
-        bool mIsValid = true;
+        bool mIsValid = false;
 };
 
 } // end lima namespace
