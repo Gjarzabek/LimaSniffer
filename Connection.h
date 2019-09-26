@@ -17,8 +17,8 @@ class Connection {
         std::chrono::steady_clock::time_point mTimeStamp;
         // PageVisitHistory -- info from HTTP session
     public:
-        Connection();
-        ~Connection();
+        Connection() {}
+        ~Connection() {}
 };
 
 }
