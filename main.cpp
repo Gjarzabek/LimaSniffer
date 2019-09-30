@@ -1,7 +1,7 @@
 #include <chrono>
 #include "Lima.hpp"
 
-int main(int argc, char const *argv[])
+int main()
 {   
     lima::Lima a;
     return 0;

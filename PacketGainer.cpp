@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <pcapplusplus/EthLayer.h>
+#include <pcapplusplus/DnsLayer.h>
 
 namespace lima {
 
@@ -47,25 +48,22 @@ void PacketGainer::stop() {
     pcap_breakloop(mHandler);
 }
 
+// forwarding packets to dns_counter
+
 void PacketGainer::procces(u_char * args, const struct pcap_pkthdr * header, const u_char * packet) {
     static uint64_t num = 0;
     if (packet == nullptr || !header) {
         std::cerr << "Pusty pakiet nr:" << num++ << std::endl;
         return;
     }
-    /*std::cout << "Pakiet nr:" << num++ << std::endl;
-    std::cout << "Len:" << header->len << std::endl;
-    std::cout << "Caplen:" << header->caplen << std::endl;*/
+    std::cout << "Pakiet nr:" << num++ << std::endl;
     pcpp::RawPacket rawPacket((const uint8_t*)packet, header->len, header->ts, false);
     pcpp::Packet parsedPacket(&rawPacket);
     auto lastLayer = parsedPacket.getLastLayer();
-    if (lastLayer && lastLayer->getProtocol() == 0x1000)
-        std::cout << parsedPacket.toString() << std::endl;
-    /*const pcpp::ether_header * ethernetHeader = reinterpret_cast<const pcpp::ether_header *>(packet);
-    pcpp::MacAddress dst((const char *)ethernetHeader->dstMac);
-    pcpp::MacAddress src((const char *)ethernetHeader->srcMac);
-    std::cout << "dstMAC:" << dst.toString() << std::endl;
-    std::cout << "srcMAC:" << src.toString() << std::endl;*/
+    if (lastLayer && lastLayer->getProtocol() == 0x1000) {
+        auto DnsLayer = dynamic_cast<pcpp::DnsLayer*>(lastLayer);
+        std::cout << DnsLayer->toString() << std::endl;
+    }
 }
 
 }

@@ -4,7 +4,7 @@
 #include "PacketGainer.h"
 #include <unordered_map>
 #include <utility>
-#include "Connection.h"
+#include "ConnectionFlow.h"
 #include <mutex>
 #include <list>
 #include <thread>
@@ -14,7 +14,7 @@ namespace lima {
 
 class Lima {
     public:
-        Lima() : mPacketSniffer("wlx503eaab3182f") {
+        Lima() : mPacketSniffer("wlan0") {
             mPacketSniffer.start();
         }   
         ~Lima() = default;
@@ -28,7 +28,7 @@ class Lima {
         PacketGainer mPacketSniffer; // przekazuje warstwe aplikacji do packet_analyzera
         // key is string which is contcat of 2 Mac/ip Addresses[src,dst]
         std::mutex mConMapMutex;
-        std::unordered_map<std::string, std::list<Connection>> mConnectionMap;
+        std::unordered_map<std::string, std::list<ConnectionFlow>> mConnectionMap;
         // Packet analyzer
         // Packet exporter
         // container to store sniffedPacket's (self made data type for them)

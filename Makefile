@@ -9,8 +9,8 @@ Lima: main.o PacketGainer.o
 	$(CC) $(PCAPPP_LIBS_DIR) -static-libstdc++ -o LimaSniffer PacketGainer.o main.o $(PCAPPP_LIBS)
 
 
-main.o: main.cpp Lima.hpp Connection.h
-	$(CC) $(CFLAGS) main.cpp Lima.hpp Connection.h
+main.o: main.cpp Lima.hpp
+	$(CC) $(CFLAGS) main.cpp Lima.hpp ConnectionFlow.h
 
 PacketGainer.o: PacketGainer.cpp PacketGainer.h
 	$(CC) $(CFLAGS) $(PCAPPP_BUILD_FLAGS) $(PCAPPP_INCLUDES) PacketGainer.cpp PacketGainer.h
