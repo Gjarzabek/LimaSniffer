@@ -14,7 +14,7 @@ namespace lima {
 
 class Lima {
     public:
-        Lima() : mPacketSniffer("wlan0") {
+        Lima() : mPacketSniffer("wlx503eaab3182f") {
             mPacketSniffer.start();
         }   
         ~Lima() = default;

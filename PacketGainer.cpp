@@ -56,14 +56,17 @@ void PacketGainer::procces(u_char * args, const struct pcap_pkthdr * header, con
         std::cerr << "Pusty pakiet nr:" << num++ << std::endl;
         return;
     }
-    std::cout << "Pakiet nr:" << num++ << std::endl;
     pcpp::RawPacket rawPacket((const uint8_t*)packet, header->len, header->ts, false);
     pcpp::Packet parsedPacket(&rawPacket);
     auto lastLayer = parsedPacket.getLastLayer();
     if (lastLayer && lastLayer->getProtocol() == 0x1000) {
         auto DnsLayer = dynamic_cast<pcpp::DnsLayer*>(lastLayer);
-        std::cout << DnsLayer->toString() << std::endl;
+
+        std::cout << "getName(): " << DnsLayer->getFirstQuery()->getName() << std::endl << std::endl;
+        // add ConnectionFLow to ConnectionMap;
     }
 }
+
+
 
 }
