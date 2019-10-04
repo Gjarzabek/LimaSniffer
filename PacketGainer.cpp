@@ -32,7 +32,6 @@ PacketGainer::PacketGainer(std::string device): mDeviceName(device.c_str()) {
 		fprintf(stderr, "Couldn't install filter %s: %s\n", mFilterExpression, pcap_geterr(mHandler));
         return;
 	}
-    mIsValid = true;
 }
 
 PacketGainer::~PacketGainer() {
@@ -40,8 +39,10 @@ PacketGainer::~PacketGainer() {
 	pcap_close(mHandler);
 }
 
-void PacketGainer::start() {
-    pcap_loop(mHandler, -1, PacketGainer::procces, nullptr);
+
+void PacketGainer::start(std::queue<pcpp::Packet> * mCapturedPackets, std::mutex * CaputredPacketsMutex) {
+    auto package = new CallbackPackage(mCapturedPackets, CaputredPacketsMutex);
+    pcap_loop(mHandler, -1, PacketGainer::procces, static_cast<u_char *>(static_cast<void *>(package)));
 }
 
 void PacketGainer::stop() {
@@ -51,19 +52,23 @@ void PacketGainer::stop() {
 // forwarding packets to dns_counter
 
 void PacketGainer::procces(u_char * args, const struct pcap_pkthdr * header, const u_char * packet) {
+    auto PacketQPackage = reinterpret_cast<CallbackPackage*>(args);
     static uint64_t num = 0;
     if (packet == nullptr || !header) {
         std::cerr << "Pusty pakiet nr:" << num++ << std::endl;
         return;
     }
     pcpp::RawPacket rawPacket((const uint8_t*)packet, header->len, header->ts, false);
-    pcpp::Packet parsedPacket(&rawPacket);
+    pcpp::Packet parsedPacket =(&rawPacket);
     auto lastLayer = parsedPacket.getLastLayer();
     if (lastLayer && lastLayer->getProtocol() == 0x1000) {
         auto DnsLayer = dynamic_cast<pcpp::DnsLayer*>(lastLayer);
-
-        std::cout << "getName(): " << DnsLayer->getFirstQuery()->getName() << std::endl << std::endl;
-        // add ConnectionFLow to ConnectionMap;
+        if (DnsLayer && DnsLayer->getFirstQuery())
+            std::cout << "getName(): " << DnsLayer->getFirstQuery()->getName() << std::endl << std::endl;
+        else
+            std::cout << "Dns Layer without Querry" << std::endl;
+        std::lock_guard<std::mutex> lock(*(PacketQPackage->packetqueueMutex.get()));
+        PacketQPackage->packetQueue->push(std::move(parsedPacket));
     }
 }
 

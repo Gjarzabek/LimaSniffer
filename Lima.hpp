@@ -8,16 +8,19 @@
 #include <mutex>
 #include <list>
 #include <thread>
+#include <queue>
 
 
 namespace lima {
 
 class Lima {
     public:
-        Lima() : mPacketSniffer("wlx503eaab3182f") {
-            mPacketSniffer.start();
-        }   
+        Lima() : mPacketSniffer("wlan0") {
+            mPacketSniffer.start(mCapturedPackets, mCapturedQueueMutex);
+        }
+
         ~Lima() = default;
+
         void stop() {
             mPacketSniffer.stop();
         }
@@ -26,7 +29,9 @@ class Lima {
         // app_config
     private:
         PacketGainer mPacketSniffer; // przekazuje warstwe aplikacji do packet_analyzera
-        // key is string which is contcat of 2 Mac/ip Addresses[src,dst]
+        // key is string which is contcat of 2 ip Addresses[src,dst]
+        std::mutex mCapturedQueueMutex;
+        std::queue<pcpp::Packet> mCapturedPackets;
         std::mutex mConMapMutex;
         std::unordered_map<std::string, std::list<ConnectionFlow>> mConnectionMap;
         // Packet analyzer
