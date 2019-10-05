@@ -2,6 +2,7 @@
 #define LIMA_HPP
 
 #include "PacketGainer.h"
+#include "ConnectionFlowWriter.h"
 #include <unordered_map>
 #include <utility>
 #include "ConnectionFlow.h"
@@ -14,32 +15,28 @@
 namespace lima {
 
 class Lima {
+
     public:
         Lima() : mPacketSniffer("wlan0") {
-            mPacketSniffer.start(mCapturedPackets, mCapturedQueueMutex);
+            mCapturer = std::thread(PacketGainer::start, &mPacketSniffer, &mCapturedPackets, &mCapturedQueueMutex);
+            mFlowWriter = std::thread();
         }
 
-        ~Lima() = default;
-
-        void stop() {
-            mPacketSniffer.stop();
+        ~Lima() {
+            // wyslac sygnal do wątkow/dzieci zeby sie zakonczyly, za pomoca condvariable
         }
-        // start 3 threads
-        // stop 3 threads
-        // app_config
+
     private:
-        PacketGainer mPacketSniffer; // przekazuje warstwe aplikacji do packet_analyzera
-        // key is string which is contcat of 2 ip Addresses[src,dst]
+        std::thread mCapturer;
+        std::thread mFlowWriter;
+
+        PacketGainer mPacketSniffer;
         std::mutex mCapturedQueueMutex;
         std::queue<pcpp::Packet> mCapturedPackets;
         std::mutex mConMapMutex;
         std::unordered_map<std::string, std::list<ConnectionFlow>> mConnectionMap;
-        // Packet analyzer
-        // Packet exporter
-        // container to store sniffedPacket's (self made data type for them)
-        // container to store Data rdy to export
-};      // mutex
-        // condition variable
+
+};
 
 }
 
