@@ -1,3 +1,4 @@
+
 GOALS
 
 1. Parsing app layer packets, sending info about each device
@@ -7,3 +8,19 @@ GOALS
     c) 
 
 2. Ways to save sniffed info - e-mail/db
+
+
+3. Lima ------< packets from PacketGainer
+   ||
+   ||
+   ||
+   ||
+   ||
+   ↓^
+receive packets from Lima and saves them in ConnectionFlowMap
+
+4. TODO:
+    · adding flow to flowMap logic
+    · ConnectionFlow hasherFunction
+    · ConnectionFlow update
+    

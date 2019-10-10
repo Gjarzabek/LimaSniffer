@@ -36,7 +36,7 @@ class PacketGainer {
         const char * mDeviceName;
         char mErrorBuff[PCAP_ERRBUF_SIZE];
         pcap_t * mHandler;
-        char mFilterExpression[3] = "ip";
+        char mFilterExpression[3] = "ip"; // TODO: take care of other packets also.
         struct bpf_program mCompiledPcap;
         bpf_u_int32 mSubnetMask;
         bpf_u_int32 mIp;

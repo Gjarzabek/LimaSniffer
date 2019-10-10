@@ -11,15 +11,18 @@
 #include <thread>
 #include <queue>
 
-
 namespace lima {
+
+using ConnectionFlowMap = std::unordered_map<ConnectionFlow, bool, ConnectionFLowHasher>;
 
 class Lima {
 
     public:
-        Lima() : mPacketSniffer("wlan0") {
+        // po utworzeniu watkow ten watek czeka na sygnal od MapWritera zeby odebrać od niego pelną mape Flowow
+        // i przekazac do zapisu to db/maila
+        Lima() : mPacketSniffer("wlan0"), mFlowWriter(mCapturedPackets, mCapturedQueueMutex) {
             mCapturer = std::thread(PacketGainer::start, &mPacketSniffer, &mCapturedPackets, &mCapturedQueueMutex);
-            mFlowWriter = std::thread();
+            mConnectionMapWriter = std::thread(ConnectionFlowWriter::start, &mFlowWriter);
         }
 
         ~Lima() {
@@ -27,14 +30,19 @@ class Lima {
         }
 
     private:
+
         std::thread mCapturer;
-        std::thread mFlowWriter;
+        std::thread mConnectionMapWriter;
 
         PacketGainer mPacketSniffer;
+        ConnectionFlowWriter mFlowWriter;
+
         std::mutex mCapturedQueueMutex;
-        std::queue<pcpp::Packet> mCapturedPackets;
+        std::queue<pcpp::Packet> mCapturedPackets; // packetGainer stores packets here
         std::mutex mConMapMutex;
-        std::unordered_map<std::string, std::list<ConnectionFlow>> mConnectionMap;
+        // Connection Flow Writers takes packets from queue, makes ConnectionFlows from them and saves to ConnMap
+        // (or mby make another queue for ConFlows to be writed to connmap)
+        ConnectionFlowMap mConnectionMap;
 
 };
 
