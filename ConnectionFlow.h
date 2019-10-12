@@ -7,16 +7,20 @@
 #include <pcapplusplus/Packet.h>
 #include <memory>
 #include <chrono>
-#include <bitset>
+#include <functional>
 
 #include <DnsInfo.hpp>
 
 namespace lima {
 
+using IpPair = std::pair<std::string, std::string>;
+
 // all information about srcIp - dstIp Connection
 class ConnectionFlow {
 
-    friend ConnectionFLowHasher;
+    static constexpr uint8_t TIMEOUT = 15;
+
+    friend struct ConnectionFLowHasher;
 
     private:
 
@@ -34,11 +38,15 @@ class ConnectionFlow {
         struct PacketCounter {
             uint64_t fromSrcToDst = 0;
             uint64_t fromDstToSrc = 0;
+
+            PacketCounter(const PacketCounter & other) :
+                fromDstToSrc(other.fromDstToSrc), fromSrcToDst(other.fromSrcToDst) {}
         };
 
         PacketCounter mPacketCounter;
 
-        void update(pcpp::Packet & packet); // when ipsrc /ipdst are already in flowmap i just need to update info
+        void updateCounter(const IpPair & SrcDstIp);
+        
         void checkFinishConditions(pcpp::Packet & packet);
 
     public:
@@ -46,18 +54,35 @@ class ConnectionFlow {
         ConnectionFlow() = default;
         ~ConnectionFlow() = default;
 
+        ConnectionFlow(const ConnectionFlow & other);
         ConnectionFlow(pcpp::Packet & pakcet);
-        void updateCounter(const pcpp::IPAddress & src, const pcpp::IPAddress & dst);
+
+        const std::string & getSrcIp() {
+            return mSrcIp->toString();
+        }
+
+        const std::string & getDstIp() {
+            return mDstIp->toString();
+        }
+
+        void update(pcpp::Packet & packet, const IpPair & SrcDstIp); // when ipsrc /ipdst are already in flowmap i just need to update info
+        bool isFinished() const {
+            return mIsFinished;
+        }
 };
 
-// TODO: write hasher
 struct ConnectionFLowHasher {
     
-    size_t operator()(const ConnectionFlow & node) const {
 
+    size_t operator()(const IpPair & ippair) const {
+        size_t h1 = std::hash<std::string>{}(ippair.first);
+        size_t h2 = std::hash<std::string>{}(ippair.second);
+        return h1 + h2;
     }
 
 };
+
+using ConnectionFlowMap = std::unordered_map<IpPair, ConnectionFlow, ConnectionFLowHasher>;
 
 }
 

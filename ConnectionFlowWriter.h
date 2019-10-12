@@ -5,6 +5,9 @@
 #include <pcap.h>
 #include <pcapplusplus/Packet.h>
 #include <pcapplusplus/RawPacket.h>
+#include <pcapplusplus/IPv4Layer.h>
+#include <pcapplusplus/IPv6Layer.h>
+
 #include <queue>
 #include <condition_variable>
 #include <mutex>

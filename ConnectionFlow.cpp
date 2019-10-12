@@ -6,6 +6,15 @@
 
 namespace lima {
 
+    ConnectionFlow::ConnectionFlow(const ConnectionFlow & other) : 
+        mSrcIp(std::make_unique<pcpp::IPAddress>(other.mSrcIp)),
+        mDstIp(std::make_unique<pcpp::IPAddress>(other.mDstIp)),
+        mSrcMAC(other.mSrcMAC), mDstMAC(other.mDstMAC),
+        mStartTimeStamp(other.mStartTimeStamp), mLastTimeStamp(other.mLastTimeStamp),
+        mDnsInfo(other.mDnsInfo), mIsFinished(other.mIsFinished), mIsValid(other.mIsValid),
+        mPacketCounter(other.mPacketCounter) {}
+    
+    
     ConnectionFlow::ConnectionFlow(pcpp::Packet & packet) : mStartTimeStamp(std::chrono::steady_clock::now()) {
         mIsValid = false;
         mIsFinished = false;
@@ -44,8 +53,15 @@ namespace lima {
     }
 
     //TODO: write update
-    void ConnectionFlow::update(pcpp::Packet & packet) {
+    void ConnectionFlow::update(pcpp::Packet & packet, const IpPair & SrcDstIp) {
+        checkFinishConditions(packet);
         mLastTimeStamp = std::chrono::steady_clock::now();
+        updateCounter(SrcDstIp);
+        mDnsInfo.update();
+    }
+
+    void ConnectionFlow::updateCounter(const IpPair & SrcDstIp) {
+        mSrcIp->toString() == SrcDstIp.first ? ++(mPacketCounter.fromSrcToDst) : ++(mPacketCounter.fromDstToSrc);
     }
 
     void ConnectionFlow::checkFinishConditions(pcpp::Packet & packet) {
@@ -56,5 +72,6 @@ namespace lima {
         else if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mLastTimeStamp).count() > 15)
             mIsFinished = true;
     }
+
 
 }

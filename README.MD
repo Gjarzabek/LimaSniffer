@@ -9,7 +9,6 @@ GOALS
 
 2. Ways to save sniffed info - e-mail/db
 
-
 3. Lima ------< packets from PacketGainer
    ||
    ||
@@ -20,7 +19,5 @@ GOALS
 receive packets from Lima and saves them in ConnectionFlowMap
 
 4. TODO:
-    · adding flow to flowMap logic
-    · ConnectionFlow hasherFunction
-    · ConnectionFlow update
+    · DnsInfo update.
     

@@ -13,8 +13,6 @@
 
 namespace lima {
 
-using ConnectionFlowMap = std::unordered_map<ConnectionFlow, bool, ConnectionFLowHasher>;
-
 class Lima {
 
     public:

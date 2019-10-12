@@ -3,19 +3,37 @@
 
 namespace lima {
 
-    // TODO: create adding to flowmap logic - includes maxSIZE
     void ConnectionFlowWriter::packetProcess() {
         while (!mProcessPackets.empty()) {
             auto packet = mProcessPackets.back();
-            ConnectionFlow newFlow = ConnectionFlow(packet);
+            std::unique_ptr<IpPair> SrcDstIp;
+            auto ipv4 = dynamic_cast<pcpp::IPv4Layer* >(packet.getLayerOfType(pcpp::ProtocolType::IPv4));
             
-            // najpierw sprawdzam czy just jest taki src/dst ip jesli nie to dodaje nowego flowa
-            // jesli jest to:
-            // sprawdzam czy czas od ostatniej aktualki jest wiekszy niz 15 sek lub
-            // jesli jest zakonczony przez flage fin/rst pakietu to tworze nowego flowa a tego zakonczonego przenosze do readyToExportMap;
-            // jesli mapa przekroczy MAXSIZE to przenoszę calą do ready to eksport.
+            if (ipv4) {
+                SrcDstIp = std::make_unique<IpPair>(ipv4->getSrcIpAddress().toString(),
+                                                    ipv4->getDstIpAddress().toString());
+            }
+            else {
+                auto ipv6 = dynamic_cast<pcpp::IPv6Layer* >(packet.getLayerOfType(pcpp::ProtocolType::IPv6));
+                SrcDstIp = std::make_unique<IpPair>(ipv6->getSrcIpAddress().toString(),
+                                                    ipv6->getDstIpAddress().toString());
+            }
+
+            ConnectionFlow Flow = ConnectionFlow(packet);
+            auto iter = mCurrentFlows.find(*SrcDstIp);
             
-            ConnectionFlow flow = ConnectionFlow(packet);
+            if (iter == mCurrentFlows.end()) {
+                mCurrentFlows.emplace(std::move(*SrcDstIp), std::move(Flow));
+            }
+            else {
+                ConnectionFlow & updateFlow = mCurrentFlows[iter->first];
+                updateFlow.update(packet);
+                if (updateFlow.isFinished()) {
+                    mFlowsToExport.emplace(std::move(*SrcDstIp), std::move(updateFlow));
+                    mCurrentFlows.erase(iter);
+                }
+            }
+            
             mProcessPackets.pop();
         }   
     }
